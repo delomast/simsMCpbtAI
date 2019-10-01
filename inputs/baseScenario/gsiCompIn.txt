@@ -1,0 +1,11 @@
+Group	17	18	19	20	21	22	23	24
+GSIgroup1	0	0	3	1	2	1	1	1
+GSIgroup2	0	0	0	1	3	2	3	1
+GSIgroup3	0	4	7	1	3	1	1	0
+GSIgroup4	0	9	5	1	2	1	2	0
+GSIgroup5	0	2	3	2	6	5	4	0
+GSIgroup6	0	2	3	4	4	6	2	2
+GSIgroup7	0	4	5	5	8	2	1	0
+GSIgroup8	0	0	0	1	5	6	24	31
+GSIgroup9	3	28	24	15	17	9	5	4
+GSIgroup10	0	30	30	31	17	7	5	2
