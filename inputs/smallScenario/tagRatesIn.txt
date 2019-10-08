@@ -1,0 +1,4 @@
+Group	tagRate
+PBTgroup1	0.7
+PBTgroup2	0.8
+PBTgroup3	0.9

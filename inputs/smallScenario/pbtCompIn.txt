@@ -1,0 +1,4 @@
+Group	17
+PBTgroup1	2
+PBTgroup2	3
+PBTgroup3	2

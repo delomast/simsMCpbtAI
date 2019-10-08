@@ -1,0 +1,4 @@
+Group	17
+GSIgroup1	2
+GSIgroup2	2
+GSIgroup3	3

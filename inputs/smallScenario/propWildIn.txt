@@ -1,0 +1,2 @@
+Strata	propWild
+17	0.6

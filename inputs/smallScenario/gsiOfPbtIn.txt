@@ -1,0 +1,4 @@
+Group	GSIgroup1	GSIgroup2	GSIgroup3
+PBTgroup1	2	1	1
+PBTgroup2	1	2	1
+PBTgroup3	1	1	2

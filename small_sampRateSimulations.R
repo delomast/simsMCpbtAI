@@ -1,4 +1,5 @@
 # running simulations to test MCpbt and scobi_deux
+## sample rate with the small scenario
 
 #install if haven't already
 # devtools::install_github("delomast/fishCompTools")
@@ -19,13 +20,13 @@ if(Sys.info()["sysname"] == "Windows"){
 # first, load in the base scenario inputs
 
 # relative sizes of the wild groups
-gsiComp <- read.table("./inputs/baseScenario/gsiCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+gsiComp <- read.table("./inputs/smallScenario/gsiCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 # relative sizes of the unclipped hatchery groups
-pbtComp <- read.table("./inputs/baseScenario/pbtCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+pbtComp <- read.table("./inputs/smallScenario/pbtCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 # gsi assignmnet of the unclipped hatchery groups
-gsiOfPbt <- read.table("./inputs/baseScenario/gsiOfPbtIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+gsiOfPbt <- read.table("./inputs/smallScenario/gsiOfPbtIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 # normalize
 for(i in 1:nrow(gsiOfPbt)){
 	gsiOfPbt[i,2:ncol(gsiOfPbt)] <- gsiOfPbt[i,2:ncol(gsiOfPbt)] / sum(gsiOfPbt[i,2:ncol(gsiOfPbt)])
@@ -35,13 +36,13 @@ rownames(gsiOfPbt) <- gsiOfPbt[,1]
 gsiOfPbt <- gsiOfPbt[,2:ncol(gsiOfPbt)]
 
 # true proportion of each strata that is wild
-propWild <- read.table("./inputs/baseScenario/propWildIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+propWild <- read.table("./inputs/smallScenario/propWildIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 # population sizes
-popSize <- read.table("./inputs/baseScenario/popSizeIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+popSize <- read.table("./inputs/smallScenario/popSizeIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 # tag rates
-tagRates <- read.table("./inputs/baseScenario/tagRatesIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+tagRates <- read.table("./inputs/smallScenario/tagRatesIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 
 # scenarios to investigate:
@@ -87,7 +88,7 @@ set.seed(7)
 for(sr in sampRate){
 	print(sr)
 	for(r in 1:numSims){
-		if(r %% 50 == 0) print(r)
+		print(r)
 		# generate data
 		trapData <- data.frame()
 		for(s in 1:nrow(popSize)){
@@ -103,28 +104,14 @@ for(sr in sampRate){
 		tags <- tempData[[2]]
 		
 		#run MCpbt
+		print("MCpbt")
+		#using Jeffrey's prior for everything
 		input <- prepStrata(trapData, tags, "GSI", "GenParentHatchery", "StrataVar", variableCols = c(), variableColsOth = c(), "AdClip",
 										AI = TRUE, GSIgroups = NA,
 											 variableValues = NA, variableValuesOth = NA, verbose = FALSE, symPrior = 0.5)
 			
-		# now adjust pi_gsi priors to be posterior using ohnc from all other strata (with improper 0,0,0,... as prior)
-		## get sum of all strata
-		pbtGsiAllStrata <- table(trapData$GenParentHatchery[trapData$GenParentHatchery != "Unassigned"], trapData$GSI[trapData$GenParentHatchery != "Unassigned"])
-		#add any GSI groups that were not present as ohnc
-		toAddGsi <- unique(trapData$GSI)
-		toAddGsi <- toAddGsi[!(toAddGsi %in% colnames(pbtGsiAllStrata))]
-		for(a in toAddGsi){
-			pbtGsiAllStrata <- cbind(pbtGsiAllStrata, 0)
-			colnames(pbtGsiAllStrata)[ncol(pbtGsiAllStrata)] <- a
-		}
-		
-		for(s in 1:length(input)){
-			#get only categories relevant to this strata
-			tempAll <- pbtGsiAllStrata[rownames(input[[s]]$prior_pi_gsi), colnames(input[[s]]$prior_pi_gsi)]
-			#subtract those in this strata and use as prior
-			input[[s]]$prior_pi_gsi <- tempAll - input[[s]]$ohnc_gsi
-		}
-		
+		#only one strata, so no incorporating information from other strata for pi_gsi
+
 		aiRes <- estimStrataMCpbt(input, iter = 6000, burnIn = 1000, thin = 1, seed = 13)
 
 		# escapement estimates for each strata
@@ -150,33 +137,34 @@ for(sr in sampRate){
 		
 		###################################
 		# run scobi_deux
+		print("SD")
 
 		#create window count input
 		window <- cbind(popSize, 1:nrow(popSize))
 
 		#run to get PBT group compositions
 		SCOBI_deux_fast(adultData = trapData, windowData = window,
-				 Run = "HNC_sim", RTYPE = "noclip_H", Hierarch_variables = c("GenParentHatchery"),
-		                  SizeCut = NULL, alph = 0.1, B = 10, writeBoot = F, pbtRates = tags,
+				 Run = "HNC_smallSR_simJP", RTYPE = "noclip_H", Hierarch_variables = c("GenParentHatchery"),
+		                  SizeCut = NULL, alph = 0.1, B = 5000, writeBoot = F, pbtRates = tags,
 				 adClipVariable = "AdClip", physTagsVariable = "PhysTag", pbtGroupVariable = "GenParentHatchery",
 				 screenOutput = "tempScreen.txt", dataGroupVariable = "StrataVar")
 
 		#run to get wild group compositions
 		SCOBI_deux_fast(adultData = trapData, windowData = window,
-				 Run = "W_sim", RTYPE = "wild", Hierarch_variables = c("GSI"),
-		                  SizeCut = NULL, alph = 0.1, B = 10, writeBoot = F, pbtRates = tags,
+				 Run = "W_smallSR_simJP", RTYPE = "wild", Hierarch_variables = c("GSI"),
+		                  SizeCut = NULL, alph = 0.1, B = 5000, writeBoot = F, pbtRates = tags,
 				 adClipVariable = "AdClip", physTagsVariable = "PhysTag", pbtGroupVariable = "GenParentHatchery",
 				 screenOutput = "tempScreen.txt", dataGroupVariable = "StrataVar")
 
 		#record results
-		pbt_res <- read.table("./HNC_sim_CI_Hier_GenParentHatchery.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+		pbt_res <- read.table("./HNC_smallSR_simJP_CI_Hier_GenParentHatchery.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 		tempGroups <- allGroups[allGroups %in% pbt_res[,1]]
 
 		srSD_mean[currentRow,tempGroups] <- pbt_res[match(tempGroups, pbt_res[,1]), 2]
 		srSD_lower[currentRow,tempGroups] <- pbt_res[match(tempGroups, pbt_res[,1]), 3]
 		srSD_upper[currentRow,tempGroups] <- pbt_res[match(tempGroups, pbt_res[,1]), 4]
 
-		wild_res <- read.table("./W_sim_CI_Hier_GSI.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+		wild_res <- read.table("./W_smallSR_simJP_CI_Hier_GSI.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 		tempGroups <- allGroups[allGroups %in% wild_res[,1]]
 
 		srSD_mean[currentRow,tempGroups] <- wild_res[match(tempGroups, wild_res[,1]), 2]
@@ -207,4 +195,4 @@ for(i in 2:ncol(pbtComp)){
 }
 
 #save estimates and true values
-save(sr_mean, sr_upper, sr_lower, srSD_mean, srSD_upper, srSD_lower, srRec, trueComp, file = "./rdaOutputs/large_sampRateSimsOutput_sym5.rda")
+save(sr_mean, sr_upper, sr_lower, srSD_mean, srSD_upper, srSD_lower, srRec, trueComp, file = "./rdaOutputs/small_sampRate_symprior5.rda")
