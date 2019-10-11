@@ -157,14 +157,14 @@ for(sr in sampRate){
 		#run to get PBT group compositions
 		SCOBI_deux_fast(adultData = trapData, windowData = window,
 				 Run = "HNC_sim", RTYPE = "noclip_H", Hierarch_variables = c("GenParentHatchery"),
-		                  SizeCut = NULL, alph = 0.1, B = 10, writeBoot = F, pbtRates = tags,
+		                  SizeCut = NULL, alph = 0.1, B = 5000, writeBoot = F, pbtRates = tags,
 				 adClipVariable = "AdClip", physTagsVariable = "PhysTag", pbtGroupVariable = "GenParentHatchery",
 				 screenOutput = "tempScreen.txt", dataGroupVariable = "StrataVar")
 
 		#run to get wild group compositions
 		SCOBI_deux_fast(adultData = trapData, windowData = window,
 				 Run = "W_sim", RTYPE = "wild", Hierarch_variables = c("GSI"),
-		                  SizeCut = NULL, alph = 0.1, B = 10, writeBoot = F, pbtRates = tags,
+		                  SizeCut = NULL, alph = 0.1, B = 5000, writeBoot = F, pbtRates = tags,
 				 adClipVariable = "AdClip", physTagsVariable = "PhysTag", pbtGroupVariable = "GenParentHatchery",
 				 screenOutput = "tempScreen.txt", dataGroupVariable = "StrataVar")
 
