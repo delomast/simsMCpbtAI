@@ -141,7 +141,6 @@ for(sr in sampRate){
 		escapeResults <- multByEscapement(input, aiRes, clipRes = NA, escapementByStrata, verbose = FALSE, writeSummary = FALSE)
 		
 		# record results - group compositions and CIs over the whole run
-		colnames(escapeResults$totPiTotEstim) %in% allGroups
 		tempGroups <- allGroups[allGroups %in% colnames(escapeResults$totPiTotEstim)] # incase a group wasn't sampled
 		
 		sr_mean[currentRow,tempGroups] <- apply(escapeResults$totPiTotEstim[,tempGroups],2,mean)
