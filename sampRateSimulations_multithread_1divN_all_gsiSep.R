@@ -94,7 +94,7 @@ set.seed(7)
 ## defining function to calculate estimates and return estimates in a semi-convenient form
 
 compFunc <- function(data){
-	
+# data = dataList[[1]]
 	#unpack input
 	trapData <- data[[1]]
 	tags <- data[[2]]
@@ -110,7 +110,7 @@ compFunc <- function(data){
 
 	for(s in 1:length(input)){
 
-		#subtract those in this strata and use as prior
+		#make prior 1/N
 		input[[s]]$prior_pi_gsi <- matrix(1/ncol(input[[s]]$prior_pi_gsi), nrow = nrow(input[[s]]$prior_pi_gsi), ncol = ncol(input[[s]]$prior_pi_gsi))
 		
 		#make piTot prior 1/N,...

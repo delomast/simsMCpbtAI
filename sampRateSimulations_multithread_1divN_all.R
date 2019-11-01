@@ -120,13 +120,6 @@ compFunc <- function(data){
 								AI = TRUE, GSIgroups = sort(unique(trapData$GSI[trapData$GenParentHatchery == "Unassigned"])),
 									 variableValues = NA, variableValuesOth = NA, verbose = FALSE, symPrior = 0.5)
 	
-	### left off here
-	input[[1]]	
-	
-	### now need to modify priors appropriately, not that in piTot unobserved GSI gropus are already set to 0 by the function
-	
-	
-	
 	# now adjust pi_gsi priors to be posterior using ohnc from all other strata 
 	########
 	####################(with improper 1/N,... as prior)
@@ -140,13 +133,11 @@ compFunc <- function(data){
 		pbtGsiAllStrata <- cbind(pbtGsiAllStrata, 0)
 		colnames(pbtGsiAllStrata)[ncol(pbtGsiAllStrata)] <- a
 	}
+	pbtGsiAllStrata <- pbtGsiAllStrata + 1/ncol(pbtGsiAllStrata) # add 1/N
 	
 	for(s in 1:length(input)){
-		#get only categories relevant to this strata
-		tempAll <- pbtGsiAllStrata[rownames(input[[s]]$prior_pi_gsi), colnames(input[[s]]$prior_pi_gsi)]
-		tempAll <- tempAll + 1/ncol(tempAll) # add the 1/N to each alpha
 		#subtract those in this strata and use as prior
-		input[[s]]$prior_pi_gsi <- tempAll - input[[s]]$ohnc_gsi
+		input[[s]]$prior_pi_gsi <- pbtGsiAllStrata[rownames(input[[s]]$prior_pi_gsi), colnames(input[[s]]$prior_pi_gsi)] - input[[s]]$ohnc_gsi
 		
 		#make piTot prior 1/N,...
 		input[[s]]$piTotPrior[input[[s]]$piTotPrior > 0] <- 1/sum(input[[s]]$piTotPrior > 0)
@@ -221,8 +212,8 @@ for(sr in sampRate){
 		dataList[[r]] <- list(trapData, tags, r, popSize) #saving r to use as prefix for SD output files
 	}
 	
-	# #testing
-	# print(compFunc(dataList[[33]]))
+	#testing
+	# print(compFunc(dataList[[1]]))
 	# break
 	
 	#now run in parallel
