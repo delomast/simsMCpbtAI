@@ -1,14 +1,14 @@
 # running simulations to test MCpbt and scobi_deux
 # using parallele processing to speed up simulations
-# this is sample rate of SMALL scenario with prior on piTot of 1/number of groups
-#		and prior on piGSI as 1/N
+# this is sample rate of SMALL scenario with just MLE
 
 #install if haven't already
 # devtools::install_github("delomast/fishCompTools")
 # devtools::install_github("delomast/devMCpbt")
 
 ###################
-## note that this uses forking through the parallel package, so it will not work on Windows systems
+## note that this uses forking through the parallel package, so it will not work on Windows systems unless you
+## set countCores <- 1
 ###################
 
 #load libraries
@@ -84,7 +84,6 @@ currentRow <- 1
 
 #parallel options
 countCores <- detectCores()
-# countCores <- 1
 
 #set seed for R
 # seed for MCpbt is separate and is set in function call
@@ -106,7 +105,7 @@ compFunc <- function(data){
 
 
 	
-# trapData[trapData$GenParentHatchery == "Unassigned", "GSI"] <- "GSIgroup1"
+
 	convergeBool <- NA
 	
 	#run MLE
@@ -131,22 +130,52 @@ compFunc <- function(data){
 		srMLE_mean[1,g] <- tempSum
 	}
 	
-	MLEwrapper(trapData[trapData$StrataVar == 18,], tags = tags, GSIcol = "GSI", PBTcol = "GenParentHatchery", 
-												  strataCol = "StrataVar", adFinCol = "AdClip", AI = TRUE, optimMethod = "Nelder-Mead", variableCols = NULL, 
-												  control = list(maxit=10000))[[1]]
+	###############################
+	######### bootstrapping the MLE is WAY too slow to realistically evaluate coverage for the large scenario
+	###############################
+	# # the number of bootstraps we will perform
+	# bootRep <- 50
+	# # a data structure to save the estimates
+	# #each row is an estimate, each column is a group
+	# bootPiTot <- matrix(0, nrow = bootRep, ncol = length(allGroups))
+	# colnames(bootPiTot) <- allGroups #pulling the group names from strataComp
+	# #separate data by strata
+	# dataByStrata <- list()
+	# for(s in unique(trapData$StrataVar)){
+	# 	dataByStrata[[as.character(s)]] <-  trapData[trapData$StrataVar == s,]
+	# }
+	# for(b in 1:bootRep){
+	# 	cat("\n", b, "\n")
+	# 	#resample each strata separately
+	# 	bootData <- data.frame()
+	# 	for(d in dataByStrata){
+	# 		bootData <- rbind(bootData, d[sample(1:nrow(d), nrow(d), replace = TRUE),])
+	# 	}
+	# 	#get estimates for each strata with resampled data
+	# 	invisible(capture.output(
+	# 	bootEst <- MLEwrapper(bootData, tags = tags, GSIcol = "GSI", PBTcol = "GenParentHatchery", strataCol = "StrataVar", adFinCol = "AdClip", AI = TRUE, 
+	# 								 optimMethod = "Nelder-Mead", variableCols = NULL, control = list(maxit=10000))
+	# 	))
+	# 	#now multiply be population size
+	# 	strataComp <- list()
+	# 	for(i in 1:length(bootEst)){
+	# 		strataComp[[i]] <- bootEst[[i]]$piTot * popSize[i,2]
+	# 	}
+	# 	#now sum up across strata and add to bootPiTot
+	# 	for(g in colnames(bootPiTot)){
+	# 		tempSum <- 0
+	# 		for(strat in strataComp){
+	# 			# removign NA in case group does not exist in this resample
+	# 			tempSum <- sum(tempSum, strat[g], na.rm = TRUE)
+	# 		}
+	# 		bootPiTot[b,g] <- tempSum
+	# 	}
+	# }
+	# #now, let's calculate a 90% CI
+	# srMLE_lower[1,allGroups] <- apply(bootPiTot[,allGroups],2,quantile, c(.05))
+	# srMLE_upper[1,allGroups] <- apply(bootPiTot[,allGroups],2,quantile, c(.95))
 
-	
-	
-	
-	MLEwrapper(trapData[trapData$StrataVar == 18,], tags, "GSI", "GenParentHatchery", "StrataVar", adFinCol = "AdClip", AI = TRUE, 
-			  optimMethod = "BFGS", variableCols = c(), gr = params_grad, control = list(maxit = 10000))[[1]]
 
-MLEwrapper(trapData[trapData$StrataVar == 18,], tags, "GSI", "GenParentHatchery", "StrataVar", adFinCol = "AdClip", AI = TRUE, 
-			  optimMethod = "L-BFGS-B", variableCols = c(), gr = params_grad, lower=10^-24, control = list(maxit = 10000))[[1]]
-
-MLEwrapper(trapData[trapData$StrataVar == 18,], tags, "GSI", "GenParentHatchery", "StrataVar", adFinCol = "AdClip", AI = TRUE, 
-			  optimMethod = "BFGS", variableCols = c(), control = list(maxit = 10000))[[1]]
-	
 	## utilizing the sr* data structures is a little lazy, but it works
 	return(list(
 		sr_mean[1,],
@@ -164,11 +193,7 @@ MLEwrapper(trapData[trapData$StrataVar == 18,], tags, "GSI", "GenParentHatchery"
 	
 }
 
-# tagRates[,2] <- tagRates[,2]/3
-# tagRates[1:2,2] <- tagRates[2:1,2]
-# tagRates[1,2] <- .9
-# tagRates[2,2] <- .1
-# tagRates[,2] <- 1
+
 
 for(sr in sampRate){
 	print(sr)
@@ -234,26 +259,6 @@ for(i in 2:ncol(pbtComp)){
 	trueComp[tempNames] <- trueComp[tempNames] + (tempnorm * tot)
 }
 
-apply(srMLE_mean,2,mean)
-trueComp
-## why is 1 so poorly estimated??? is it b/c it is the normalized against parameter? so other sizes are directly optimized, but it isn't?
-## try feeding a parameter for it into the estimator as well? or try the log(ratios) approach?
-###
-## was likely b/c it didn't have a parameter for group 1 (set to 1). changed functions (in devMCpbt) to use a parameter for all groups
-## this means there are infinite number of equal optima, as parameters are scaled against each other
-## shouldn't be a big problem for optim, though, b/c it just finds a local optima close to the starting values
-## also makes programming the functions much simpler!
-
-
-apply(srMLE_mean,1,sum)
-
-dataList[[1]]
-
-hist(srMLE_mean[,2], breaks = 20)
-abline(v=mean(srMLE_mean[,2]))
-abline(v=median(srMLE_mean[,2]))
-abline(v=514)
-
 #save estimates and true values
 save(sr_mean, sr_upper, sr_lower, srSD_mean, srSD_upper, srSD_lower, srRec, trueComp, convergeMLE, srMLE_mean,
-	  srMLE_lower, srMLE_upper, file = "./rdaOutputs/small_sampRate_1divN.rda")
+	  srMLE_lower, srMLE_upper, file = "./rdaOutputs/small_sampRate_mle.rda")
