@@ -6,7 +6,10 @@
 # devtools::install_github("delomast/fishCompTools")
 
 ###################
-## note that this uses forking through the parallel package, so it will not work on Windows systems unless you set number of cores to 1
+## NOTE: 
+##   1. this uses forking through the parallel package, so it will not work on Windows systems unless you set number of cores to 1
+##   2. this is made parallel by generating multiple datasets in groups of numSims. if numSims is large and/or the sampRate * popSize
+##        is large, this will use a lot of memory. Can be avoided by have repetitions of the same sampling rate in sampRate.
 ###################
 
 #load libraries
@@ -43,8 +46,8 @@ tagRates <- read.table("./inputs/baseScenario/tagRatesIn.txt", header = TRUE, st
 
 # scenarios to investigate:
 ## sample rate - THIS SCRIPT
-## relatively similar tag rates
-## highly variable tag rates
+## relatively similar tag rates ?
+## highly variable tag rates ?
 ## one sub-variable, similar between wild and hatchery
 ## one sub-variable, distinct between wild and hatchery
 ## GSI composition similar between PBT groups
