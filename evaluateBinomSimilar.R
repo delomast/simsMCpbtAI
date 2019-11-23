@@ -12,6 +12,9 @@ library(tidyverse)
 
 load("./rdaOutputs/addBinomVarSimilar.rda")
 
+# check if MLE failed to converge on any simulations
+table(convergeMLE, useNA="ifany")
+
 ## trueComp not calculated in script, so need to load from previous rda file
 trueComp <- sapply("./rdaOutputs/sampRateLarge.rda", function(x){
 	load(x) #load within function provides temporary environment, so nothing is overwritten

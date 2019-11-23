@@ -10,6 +10,10 @@ load("./rdaOutputs/sampRateLarge.rda")
 
 ### looking at SD and MLE
 
+# check if MLE failed to converge on any simulations
+table(convergeMLE, useNA="ifany")
+
+
 # sampling varaition means sometimes groups that are present are not sampled
 # replacing these "NA" estimates with 0 for looking at error of point estimates
 
