@@ -77,7 +77,7 @@ for(group in PBTselect){
 	graphs[[group]] <- ggplot(dataPlot, aes(x=type, y=estim)) + geom_violin(draw_quantiles = c(.25, .5, .75), fill="#A4A4A4") +
 	theme(legend.position = "none", axis.text = element_text(size=12, colour = "black"), axis.title = element_text(size=12, colour = "black")) + 
 		stat_summary(fun.y=mean, geom = "point", color="red", size = 3) +
-		ggtitle(paste(group)) +
+		# ggtitle(paste(group)) +
 			ylim(.95 * min(dataPlot$estim),
 				  1.05 * max(dataPlot$estim)) + ylab("Population size") + 
 	scale_y_continuous(breaks = seq(round(min(dataPlot$estim), -1), round(max(dataPlot$estim), -1), 
@@ -105,7 +105,7 @@ for(group in GSIselect){
 	graphs[[group]] <- ggplot(dataPlot, aes(x=type, y=estim)) + geom_violin(draw_quantiles = c(.25, .5, .75), fill="#A4A4A4") +
 	theme(legend.position = "none", axis.text = element_text(size=12, colour = "black"), axis.title = element_text(size=12, colour = "black")) + 
 		stat_summary(fun.y=mean, geom = "point", color="red", size = 3) +
-		ggtitle(paste(group)) +
+		# ggtitle(paste(group)) +
 			ylim(.95 * min(dataPlot$estim),
 				  1.05 * max(dataPlot$estim)) + ylab("Population size") + 
 	scale_y_continuous(breaks = seq(round(min(dataPlot$estim), -1), round(max(dataPlot$estim), -1), 
