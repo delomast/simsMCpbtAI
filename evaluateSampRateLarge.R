@@ -1,5 +1,5 @@
 # evalute simulations of variable sampling rate
-library(ggplot2)
+library(tidyverse)
 library(cowplot)
 
 ################
@@ -58,7 +58,7 @@ for(group in names(trueComp)){
 		p + stat_summary(fun.y=mean, geom = "point", color="red", size = 5) + 
 			geom_hline(aes(yintercept = trueComp[group]), linetype = "dashed", color = "blue", size = 2) +
 			# theme(text = element_text(size = 30)) + 
-			xlab("Estimate type") + ylab("Estimate") + ggtitle(paste(group, "sample rate:", tempSR)) +
+			xlab("Estimate type") + ylab("Population size") + ggtitle(paste(group, "sample rate:", tempSR)) +
 			ylim(.95 * min(srSD_mean[,group], srSD_tag100[,group], srSD_spibetrFALSE[,group], na.rm = T), 
 				  1.05 * max(srSD_mean[,group], srSD_tag100[,group], srSD_spibetrFALSE[,group], na.rm = T))
 	)
@@ -79,7 +79,7 @@ for(group in PBTselect){
 		stat_summary(fun.y=mean, geom = "point", color="red", size = 3) +
 		ggtitle(paste(group)) +
 			ylim(.95 * min(dataPlot$estim),
-				  1.05 * max(dataPlot$estim)) + ylab("Number") + 
+				  1.05 * max(dataPlot$estim)) + ylab("Population size") + 
 	scale_y_continuous(breaks = seq(round(min(dataPlot$estim), -1), round(max(dataPlot$estim), -1), 
 											  by = round((max(dataPlot$estim) - min(dataPlot$estim)) / 4, -1)))
 }
@@ -107,7 +107,7 @@ for(group in GSIselect){
 		stat_summary(fun.y=mean, geom = "point", color="red", size = 3) +
 		ggtitle(paste(group)) +
 			ylim(.95 * min(dataPlot$estim),
-				  1.05 * max(dataPlot$estim)) + ylab("Number") + 
+				  1.05 * max(dataPlot$estim)) + ylab("Population size") + 
 	scale_y_continuous(breaks = seq(round(min(dataPlot$estim), -1), round(max(dataPlot$estim), -1), 
 											  by = round((max(dataPlot$estim) - min(dataPlot$estim)) / 4, -1)))
 }
@@ -138,7 +138,7 @@ for(type in c("MLE", "Ac", "TotEx", "NoEx")){
 			p + stat_summary(fun.y=mean, geom = "point", color="red", size = 2) + 
 				geom_hline(aes(yintercept = trueComp[group]), linetype = "dashed", color = "blue", size = 1) +
 				geom_vline(aes(xintercept = 3.5), linetype = "solid", color = "black", size = 1)+
-				xlab("Sampling rate") + ylab("Estimated number of fish") + ggtitle(paste(type, group)) +
+				xlab("Sampling rate") + ylab("Population size") + ggtitle(paste(type, group)) +
 				ylim(.95 * min(srMLE_mean[,group], srSD_mean[,group], srSD_spibetrFALSE[,group], srSD_tag100[,group]), 
 					  1.05 * max(srMLE_mean[,group], srSD_mean[,group], srSD_spibetrFALSE[,group], srSD_tag100[,group]))
 		)
@@ -153,7 +153,6 @@ rm(p)
 ###################
 ## MSE
 ###################
-library(tidyverse)
 trueComp # simulated values
 
 # SD 100%
@@ -250,3 +249,45 @@ allCovSumMS <- allCovSum %>% gather("type", "cov", 3:4) %>% group_by(sr, type) %
 write.table(allCovSumMS, "tables/summarySampRateCoverage.txt", sep = "\t", row.names = F, quote = F)
 
 
+###################
+## look at distribution of raw error
+###################
+
+# SD 100%
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_tag100[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(data.frame(sr = as.factor(srRec), ER))
+ER_srSD_tag100 <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(sr, group) %>% summarize(NoEx = mean(estimate))
+
+# SD SPIBETR=FALSE
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_spibetrFALSE[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(data.frame(sr = as.factor(srRec), ER))
+ER_srSD_spibetrFALSE <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(sr, group) %>% summarize(TotEx = mean(estimate))
+
+# SD normal
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_mean[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(data.frame(sr = as.factor(srRec), ER))
+ER_srSD_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(sr, group) %>% summarize(Ac = mean(estimate))
+
+# MLE
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srMLE_mean[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(data.frame(sr = as.factor(srRec), ER))
+ER_srMLE_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(sr, group) %>% summarize(MLE = mean(estimate))
+
+allER <- ER_srSD_tag100 %>% left_join(ER_srSD_spibetrFALSE, by=c("sr", "group")) %>%
+	left_join(ER_srSD_mean, by=c("sr", "group")) %>% 
+	left_join(ER_srMLE_mean, by=c("sr", "group")) %>% gather("type", "ER", 3:6)
+
+ER_out <- allER %>% filter(group %in% c(PBTselect, GSIselect) & sr %in% seq(.1, .4, .1)) %>% filter(type != "TotEx") %>% 
+	mutate(ER = round(ER, 0)) %>% spread(type, ER) %>% 
+	select(sr, group, MLE, Ac, NoEx)
+
+
+## ER table for select groups for ms
+write.table(ER_out, "tables/selectSampRateER.txt", sep = "\t", row.names = F, quote = F)
+
+## ER table for all groups for supplementary
+write.table(mutate(allER, ER = round(ER, 0)), "tables/allSampRateDiffER.txt", sep = "\t", row.names = F, quote = F)

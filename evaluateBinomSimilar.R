@@ -110,3 +110,50 @@ write.table(MSE_out, "tables/selectBinomSimilarMSE.txt", sep = "\t", row.names =
 ## MSE table for all groups for supplementary
 write.table(mutate(allMSE, MSE = round(MSE, 0)), "tables/allBinomSimilarMSE.txt", sep = "\t", row.names = F, quote = F)
 
+
+
+###################
+## look at distribution of raw error
+###################
+# SD 100%
+ER <- mapply(function(t,e){
+		(t - e)
+	}, trueCompList, split(srSD_tag100, row(srSD_tag100)))
+ER <- as.tibble(t(ER))
+ER_srSD_tag100 <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(NoEx = mean(estimate))
+
+# SD SPIBETR=FALSE
+ER <- mapply(function(t,e){
+		(t - e)
+	}, trueCompList, split(srSD_spibetrFALSE, row(srSD_spibetrFALSE)))
+ER <- as.tibble(t(ER))
+ER_srSD_spibetrFALSE <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(TotEx = mean(estimate))
+
+# SD normal
+ER <- mapply(function(t,e){
+		(t - e)
+	}, trueCompList, split(srSD_mean, row(srSD_mean)))
+ER <- as.tibble(t(ER))
+ER_srSD_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(Ac = mean(estimate))
+
+# MLE
+ER <- mapply(function(t,e){
+		(t - e)
+	}, trueCompList, split(srMLE_mean, row(srMLE_mean)))
+ER <- as.tibble(t(ER))
+ER_srMLE_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(MLE = mean(estimate))
+
+allER <- ER_srSD_tag100 %>% left_join(ER_srSD_spibetrFALSE, by=c("group")) %>%
+	left_join(ER_srSD_mean, by=c("group")) %>% 
+	left_join(ER_srMLE_mean, by=c("group")) %>% gather("type", "ER", 2:5)
+
+ER_out <- allER %>% filter(group %in% c(PBTselect, GSIselect)) %>% filter(type != "TotEx") %>% 
+	mutate(ER = round(ER, 0)) %>% spread(type, ER) %>% 
+	select(group, MLE, Ac, NoEx)
+
+
+## ER table for select groups for ms
+write.table(ER_out, "tables/selectBinomSimilarER.txt", sep = "\t", row.names = F, quote = F)
+
+## ER table for all groups for supplementary
+write.table(mutate(allER, ER = round(ER, 0)), "tables/allBinomSimilarER.txt", sep = "\t", row.names = F, quote = F)

@@ -1,0 +1,6 @@
+group	MLE	Ac	NoEx
+GSIgroup3	-4	-1	-42
+GSIgroup9	9	10	-31
+pbtGroup11	5	-2	59
+pbtGroup25	6	2	59
+pbtGroup8	1	1	2

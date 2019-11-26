@@ -91,3 +91,75 @@ ggplot(data = allMSE, aes(x=group, y=MSE, fill=type)) + geom_bar(stat="identity"
 
 ggplot(data = filter(allMSE, type %in% c("Ac", "MLE")), aes(x=group, y=MSE, fill=type)) + geom_bar(stat="identity", position=position_dodge()) + 
 	theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+## look at some graphs to check bias
+tempSR <- .20
+pdf("graphs/tempBiasCheck.pdf")
+for(group in names(trueComp)){
+	
+	dataPlot <- data.frame(estim = srMLE_mean[srRec == tempSR, group], type = "MLE")
+	dataPlot <- rbind(dataPlot, data.frame(estim = srSD_mean[srRec == tempSR, group], type = "Ac"))
+	if(grepl("GSIgroup", group)) dataPlot <- rbind(dataPlot, data.frame(estim = srSD_spibetrFALSE[srRec == tempSR, group], type = "TotEx"))
+	dataPlot <- rbind(dataPlot, data.frame(estim = srSD_tag100[srRec == tempSR, group], type = "NoEx"))
+	
+	p <- ggplot(dataPlot, aes(x=type, y=estim)) + geom_violin(draw_quantiles = c(.25, .5, .75), fill="#A4A4A4") + 
+	theme(legend.position = "none")
+	
+	#make the plot and add mean and true line
+	print(
+		p + stat_summary(fun.y=mean, geom = "point", color="red", size = 5) + 
+			geom_hline(aes(yintercept = trueComp[group]), linetype = "dashed", color = "blue", size = 2) +
+			# theme(text = element_text(size = 30)) + 
+			xlab("Estimate type") + ylab("Estimate") + ggtitle(paste(group, "sample rate:", tempSR)) +
+			ylim(.95 * min(srSD_mean[,group], srSD_tag100[,group], srSD_spibetrFALSE[,group], na.rm = T), 
+				  1.05 * max(srSD_mean[,group], srSD_tag100[,group], srSD_spibetrFALSE[,group], na.rm = T))
+	)
+
+}
+dev.off()
+
+file.remove("graphs/tempBiasCheck.pdf") #remove temporary graphs after checking all groups
+
+###################
+## look at distribution of raw error
+###################
+
+# SD 100%
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_tag100[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(ER)
+ER_srSD_tag100 <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(NoEx = mean(estimate))
+
+# SD SPIBETR=FALSE
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_spibetrFALSE[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(ER)
+ER_srSD_spibetrFALSE <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(TotEx = mean(estimate))
+
+# SD normal
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srSD_mean[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(ER)
+ER_srSD_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(Ac = mean(estimate))
+
+# MLE
+ER <- sapply(names(trueComp), function(x) (trueComp[x] - srMLE_mean[,x]))
+colnames(ER) <- names(trueComp)
+ER <- as.tibble(ER)
+ER_srMLE_mean <- ER %>% gather("group", "estimate", c(2:ncol(ER))) %>% group_by(group) %>% summarize(MLE = mean(estimate))
+
+allER <- ER_srSD_tag100 %>% left_join(ER_srSD_spibetrFALSE, by=c("group")) %>%
+	left_join(ER_srSD_mean, by=c("group")) %>% 
+	left_join(ER_srMLE_mean, by=c("group")) %>% gather("type", "ER", 2:5)
+
+ER_out <- allER %>% filter(group %in% c(PBTselect, GSIselect)) %>% filter(type != "TotEx") %>% 
+	mutate(ER = round(ER, 0)) %>% spread(type, ER) %>% 
+	select(group, MLE, Ac, NoEx)
+
+
+## ER table for select groups for ms
+write.table(ER_out, "tables/selectDiffGSIofPBTER.txt", sep = "\t", row.names = F, quote = F)
+
+## ER table for all groups for supplementary
+write.table(mutate(allER, ER = round(ER, 0)), "tables/allDiffGSIofPBTER.txt", sep = "\t", row.names = F, quote = F)

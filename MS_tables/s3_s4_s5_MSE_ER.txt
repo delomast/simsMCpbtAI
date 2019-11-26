@@ -1,0 +1,16 @@
+scenario	group	MSE_MLE	MSE_Ac	MSE_NoEx	ER_MLE	ER_Ac	ER_NoEx
+3	GSIgroup3_cat2	1474	1473	1474	0	0	-1
+3	GSIgroup9_cat2	9500	9515	19552	4	3	-102
+3	pbtGroup11_cat2	744	743	1573	0	0	36
+3	pbtGroup25_cat2	3035	3037	4051	4	3	37
+3	pbtGroup8_cat2	323	324	319	0	0	1
+4	GSIgroup3_cat2	772	773	775	0	0	-2
+4	GSIgroup9_cat2	5726	5733	20318	1	1	-122
+4	pbtGroup11_cat2	836	836	2090	1	1	42
+4	pbtGroup25_cat2	3262	3272	4207	-3	-4	36
+4	pbtGroup8_cat2	332	333	327	0	0	1
+5	GSIgroup3_cat2	902	997	1010	-1	1	-14
+5	GSIgroup9_cat2	19843	20703	889198	-4	-2	-938
+5	pbtGroup11_cat2	1759	1746	5350	0	0	72
+5	pbtGroup25_cat2	11103	11386	217165	-1	-6	462
+5	pbtGroup8_cat2	1041	1227	2503	5	-1	49
