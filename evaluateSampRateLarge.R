@@ -67,7 +67,7 @@ for(group in names(trueComp)){
 dev.off()
 
 
-PBTselect <- c("pbtGroup8", "pbtGroup11", "pbtGroup25")
+PBTselect <- c("pbtGroup8", "pbtGroup24", "pbtGroup11")
 graphs <- list()
 for(group in PBTselect){
 	dataPlot <- data.frame(estim = srMLE_mean[srRec == tempSR, group], type = "MLE")
@@ -84,17 +84,17 @@ for(group in PBTselect){
 											  by = round((max(dataPlot$estim) - min(dataPlot$estim)) / 4, -1)))
 }
 ## some manipulations that weren't possible in the loop
-graphs[[1]] <- graphs[[1]] + geom_hline(aes(yintercept = trueComp["pbtGroup8"]), linetype = "dashed", color = "blue", size = 1) +
+graphs[[1]] <- graphs[[1]] + geom_hline(aes(yintercept = trueComp[PBTselect[1]]), linetype = "dashed", color = "blue", size = 1) +
 				theme(axis.line.x=element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank()) 
-graphs[[2]] <- graphs[[2]] + geom_hline(aes(yintercept = trueComp["pbtGroup11"]), linetype = "dashed", color = "blue", size = 1) +
+graphs[[2]] <- graphs[[2]] + geom_hline(aes(yintercept = trueComp[PBTselect[2]]), linetype = "dashed", color = "blue", size = 1) +
 	 theme(axis.line.x=element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank()) 
-graphs[[3]] <- graphs[[3]] + geom_hline(aes(yintercept = trueComp["pbtGroup25"]), linetype = "dashed", color = "blue", size = 1) +
+graphs[[3]] <- graphs[[3]] + geom_hline(aes(yintercept = trueComp[PBTselect[3]]), linetype = "dashed", color = "blue", size = 1) +
 	xlab("Estimate Type") 
 
 save_plot("graphs/selectPBTsampRate.pdf", plot_grid(plotlist = graphs, nrow = 3, labels ="AUTO"), base_asp = .4, base_height = 9.5)
 
 
-GSIselect <- c("GSIgroup3", "GSIgroup9")
+GSIselect <- c("GSIgroup3", "GSIgroup6", "GSIgroup9")
 graphs <- list()
 for(group in GSIselect){
 	dataPlot <- data.frame(estim = srMLE_mean[srRec == tempSR, group], type = "MLE")
@@ -112,12 +112,14 @@ for(group in GSIselect){
 											  by = round((max(dataPlot$estim) - min(dataPlot$estim)) / 4, -1)))
 }
 ## some manipulations that weren't possible in the loop
-graphs[[1]] <- graphs[[1]] + geom_hline(aes(yintercept = trueComp["GSIgroup3"]), linetype = "dashed", color = "blue", size = 1) +
+graphs[[1]] <- graphs[[1]] + geom_hline(aes(yintercept = trueComp[GSIselect[1]]), linetype = "dashed", color = "blue", size = 1) +
 				theme(axis.line.x=element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank()) 
-graphs[[2]] <- graphs[[2]] + geom_hline(aes(yintercept = trueComp["GSIgroup9"]), linetype = "dashed", color = "blue", size = 1) +
+graphs[[2]] <- graphs[[2]] + geom_hline(aes(yintercept = trueComp[GSIselect[2]]), linetype = "dashed", color = "blue", size = 1) +
+				theme(axis.line.x=element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank()) 
+graphs[[3]] <- graphs[[3]] + geom_hline(aes(yintercept = trueComp[GSIselect[3]]), linetype = "dashed", color = "blue", size = 1) +
 	xlab("Estimate Type") 
 
-save_plot("graphs/selectGSIampRate.pdf", plot_grid(plotlist = graphs, nrow = 2, labels ="AUTO"), base_asp = .4, base_height = 9.5)
+save_plot("graphs/selectGSIampRate.pdf", plot_grid(plotlist = graphs, nrow = 3, labels ="AUTO"), base_asp = .4, base_height = 9.5)
 
 
 ## now all groups across sampling rates

@@ -71,8 +71,8 @@ allMSE <- MSE_srSD_tag100 %>% left_join(MSE_srSD_spibetrFALSE, by=c("sr", "group
 	left_join(MSE_srMLE_mean, by=c("sr", "group")) %>% gather("type", "MSE", 3:6)
 
 
-GSIselect <- c("GSIgroup3", "GSIgroup9")
-PBTselect <- c("pbtGroup8", "pbtGroup11", "pbtGroup25")
+GSIselect <- c("GSIgroup3", "GSIgroup6", "GSIgroup9")
+PBTselect <- c("pbtGroup8", "pbtGroup24", "pbtGroup11")
 
 
 MSE_out <- allMSE %>% filter(group %in% c(PBTselect, GSIselect) & sr %in% seq(.1, .4, .1)) %>% filter(type != "TotEx") %>% 

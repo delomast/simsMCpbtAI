@@ -46,6 +46,20 @@ colnames(combinedER)[4:6] <- paste0("ER_", colnames(combinedER)[4:6])
 
 combined <- combined %>% left_join(combinedER, by = c("sr", "scenario", "group"))
 
+#change groups names to make ms easier to read
+tempSwitch <- function(x){
+	y <- rep(NA, length(x))
+	y[x == "GSIgroup3"] <- "GSI A"
+	y[x == "GSIgroup6"] <- "GSI B"
+	y[x == "GSIgroup9"] <- "GSI C"
+	y[x == "pbtGroup8"] <- "PBT A"
+	y[x == "pbtGroup24"] <- "PBT B"
+	y[x == "pbtGroup11"] <- "PBT C"
+	y
+}
+combined <- combined %>% mutate(group = tempSwitch(group)) %>% arrange(scenario, sr, group)
+combined <- rbind(combined[combined$scenario == "Base",], combined[combined$scenario != "Base",]) #put base first in table
+
 
 write.table(combined, "./MS_tables/sampRate_s1_s2_MSE_ER.txt", row.names = F, col.names = T, quote = F, sep = "\t")
 
@@ -76,6 +90,7 @@ colnames(combinedER)[3:5] <- paste0("ER_", colnames(combinedER)[3:5])
 
 combined2 <- combined2 %>% left_join(combinedER, by = c("scenario", "group")) %>% filter(grepl("cat2", group))
 
+combined2 <- combined2 %>% mutate(group = gsub("_cat2", "", group)) %>% mutate(group = tempSwitch(group)) %>% arrange(scenario, group)
 
 write.table(combined2, "./MS_tables/s3_s4_s5_MSE_ER.txt", row.names = F, col.names = T, quote = F, sep = "\t")
 
@@ -90,4 +105,3 @@ cov$range <- paste0(cov$min, " - ", cov$max)
 cov <- select(cov, sr, type, m_sd, u85, o95, range) %>% arrange(type)
 
 write.table(cov, "./MS_tables/coverage_sampRate.txt", row.names = F, col.names = T, quote = F, sep = "\t")
-

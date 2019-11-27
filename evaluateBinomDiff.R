@@ -1,7 +1,6 @@
 # evalute simulations of an additional binomial variable with DIFFERENT values
 #  between hatchery and wild populations
 
-library(ggplot2)
 library(cowplot)
 library(tidyverse)
 
@@ -98,8 +97,8 @@ ggplot(data = allMSE, aes(x=group, y=MSE, fill=type)) + geom_bar(stat="identity"
 ggplot(data = filter(allMSE, type %in% c("Ac", "MLE")), aes(x=group, y=MSE, fill=type)) + geom_bar(stat="identity", position=position_dodge()) + 
 	 theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-PBTselect <- c(paste0(c("pbtGroup8", "pbtGroup11", "pbtGroup25"), "_cat1"), paste0(c("pbtGroup8", "pbtGroup11", "pbtGroup25"), "_cat2"))
-GSIselect <- c(paste0(c("GSIgroup3", "GSIgroup9"), "_cat1"), paste0(c("GSIgroup3", "GSIgroup9"), "_cat2"))
+PBTselect <- c(paste0(c("pbtGroup8", "pbtGroup24", "pbtGroup11"), "_cat1"), paste0(c("pbtGroup8", "pbtGroup24", "pbtGroup11"), "_cat2"))
+GSIselect <- c(paste0(c("GSIgroup3", "GSIgroup6", "GSIgroup9"), "_cat1"), paste0(c("GSIgroup3", "GSIgroup6", "GSIgroup9"), "_cat2"))
 
 
 MSE_out <- allMSE %>% filter(group %in% c(PBTselect, GSIselect)) %>% filter(type != "TotEx") %>% 
