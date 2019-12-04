@@ -1,4 +1,5 @@
 # Organize all small tables into tables for the MS
+library(tidyverse)
 dir.create("MS_tables")
 # load tables
 
@@ -100,8 +101,8 @@ write.table(combined2, "./MS_tables/s3_s4_s5_MSE_ER.txt", row.names = F, col.nam
 cov <- read.table("./tables/summarySampRateCoverage.txt", header = T, stringsAsFactors = F)
 cov$type <- gsub("cov", "", cov$type)
 cov$type[cov$type == "SD"] <- "Ac"
-cov$m_sd <- paste0(cov$mean, " +/- ", cov$sd)
-cov$range <- paste0(cov$min, " - ", cov$max)
+cov$m_sd <- paste0(cov$mean*100, " +/- ", cov$sd*100)
+cov$range <- paste0(cov$min*100, " - ", cov$max*100)
 cov <- select(cov, sr, type, m_sd, u85, o95, range) %>% arrange(type)
 
 write.table(cov, "./MS_tables/coverage_sampRate.txt", row.names = F, col.names = T, quote = F, sep = "\t")
