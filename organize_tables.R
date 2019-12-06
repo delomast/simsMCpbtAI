@@ -89,9 +89,11 @@ ER_simBin$scenario <- "3"
 combinedER <- rbind(ER_simBin, ER_diffBin, ER_lowtag) %>% select(scenario, group, MLE, Ac, NoEx) 
 colnames(combinedER)[3:5] <- paste0("ER_", colnames(combinedER)[3:5])
 
-combined2 <- combined2 %>% left_join(combinedER, by = c("scenario", "group")) %>% filter(grepl("cat2", group))
+combined2 <- combined2 %>% left_join(combinedER, by = c("scenario", "group"))
 
-combined2 <- combined2 %>% mutate(group = gsub("_cat2", "", group)) %>% mutate(group = tempSwitch(group)) %>% arrange(scenario, group)
+combined2 <- combined2 %>% mutate(g1 = tempSwitch(gsub("_cat[12]", "", group)), g2 = gsub("[A-z]+[0-9]+_", "", group)) %>%
+	mutate(g2 = gsub("cat", ", category ", g2)) %>% mutate(newGroup = paste0(g1, g2)) %>% 
+	arrange(scenario, newGroup) %>% select(-g1, -g2, -group) %>% select(scenario, newGroup, everything())
 
 write.table(combined2, "./MS_tables/s3_s4_s5_MSE_ER.txt", row.names = F, col.names = T, quote = F, sep = "\t")
 
