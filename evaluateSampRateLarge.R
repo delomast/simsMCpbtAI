@@ -293,3 +293,71 @@ write.table(ER_out, "tables/selectSampRateER.txt", sep = "\t", row.names = F, qu
 
 ## ER table for all groups for supplementary
 write.table(mutate(allER, ER = round(ER, 0)), "tables/allSampRateDiffER.txt", sep = "\t", row.names = F, quote = F)
+
+########################
+## Create figure showing run timing and size of six selected groups
+########################
+
+# first, load in the base scenario inputs
+# relative sizes of the wild groups
+gsiComp <- read.table("./inputs/baseScenario/gsiCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+# relative sizes of the unclipped hatchery groups
+pbtComp <- read.table("./inputs/baseScenario/pbtCompIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+# gsi assignmnet of the unclipped hatchery groups
+gsiOfPbt <- read.table("./inputs/baseScenario/gsiOfPbtIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+# normalize
+for(i in 1:nrow(gsiOfPbt)){
+	gsiOfPbt[i,2:ncol(gsiOfPbt)] <- gsiOfPbt[i,2:ncol(gsiOfPbt)] / sum(gsiOfPbt[i,2:ncol(gsiOfPbt)])
+}
+#move group names to rownames
+rownames(gsiOfPbt) <- gsiOfPbt[,1]
+gsiOfPbt <- gsiOfPbt[,2:ncol(gsiOfPbt)]
+
+# true proportion of each strata that is wild
+propWild <- read.table("./inputs/baseScenario/propWildIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+# population sizes
+popSize <- read.table("./inputs/baseScenario/popSizeIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+# tag rates
+tagRates <- read.table("./inputs/baseScenario/tagRatesIn.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+
+GSIselect
+PBTselect
+
+#make number of fish in each strata
+figBase <- data.frame()
+for(g in GSIselect){
+	for(s in 2:ncol(gsiComp)){
+		num <- popSize[(s-1),2] * propWild[(s-1),2] * gsiComp[gsiComp$Group == g,s]/sum(gsiComp[,s])
+		figBase <- rbind(figBase, c(g,s-1,num), stringsAsFactors = FALSE)
+	}
+}
+for(g in PBTselect){
+	for(s in 2:ncol(gsiComp)){
+		num <- popSize[(s-1),2] * (1 - propWild[(s-1),2]) * pbtComp[pbtComp$Group == gsub("pbtG", "PBTg", g),s]/sum(pbtComp[,s])
+		figBase <- rbind(figBase, c(g,s-1,num), stringsAsFactors = FALSE)
+	}
+}
+colnames(figBase) <- c("group", "strata", "number")
+tempSwitch <- function(x){
+	y <- x
+	y[x == "GSIgroup3"] <- "GSI A"
+	y[x == "GSIgroup6"] <- "GSI B"
+	y[x == "GSIgroup9"] <- "GSI C"
+	y[x == "pbtGroup8"] <- "PBT A"
+	y[x == "pbtGroup24"] <- "PBT B"
+	y[x == "pbtGroup11"] <- "PBT C"
+	y
+}
+figBase <- mutate(figBase, group = tempSwitch(group), number = as.numeric(number))
+
+plotBase <- ggplot(data=figBase, aes(x=strata, y=number, group=group, colour = group, shape = group)) +
+					  geom_line() +
+					  geom_point(size = 3.5) +
+						xlab("Strata") + ylab("Number of fish") + theme(legend.title = element_blank())
+plotBase
+ggsave2("graphs/runTimingSelect.pdf", plotBase, width = 8.5, height = 6, units = "in")
+
