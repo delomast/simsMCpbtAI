@@ -1,6 +1,6 @@
 # Organize all small tables into tables for the MS
 library(tidyverse)
-dir.create("MS_tables")
+#dir.create("MS_tables")
 # load tables
 
 dir("./tables", "select.+txt", full.names = TRUE)
@@ -108,3 +108,93 @@ cov$range <- paste0(cov$min*100, " - ", cov$max*100)
 cov <- select(cov, sr, type, m_sd, u85, o95, range) %>% arrange(type)
 
 write.table(cov, "./MS_tables/coverage_sampRate.txt", row.names = F, col.names = T, quote = F, sep = "\t")
+
+
+############################
+# Supplementary tables
+
+dir("./tables", ".txt", full.names = TRUE)
+
+# MSE and ER for sample rate and diff vs similar GSI of PBT
+MSE_samp <- read.table("./tables/allSampRateMSE.txt", header = T, stringsAsFactors = F)
+MSE_diff <- read.table("./tables/allDiffGSIofPBTMSE.txt", header = T, stringsAsFactors = F)
+MSE_sim <- read.table("./tables/allSimilarGSIofPBTMSE.txt", header = T, stringsAsFactors = F)
+
+MSE_samp$scenario <- "Base"
+MSE_diff$scenario <- "2"
+MSE_sim$scenario <- "1"
+
+combined <- rbind(MSE_samp, MSE_sim, MSE_diff) %>% pivot_wider(names_from = type, values_from = MSE) %>%
+	select(sr, scenario, group, MLE, Ac, NoEx) 
+
+
+ER_samp <- read.table("./tables/allSampRateDiffER.txt", header = T, stringsAsFactors = F)
+ER_diff <- read.table("./tables/allDiffGSIofPBTER.txt", header = T, stringsAsFactors = F)
+ER_sim <- read.table("./tables/allSimilarGSIofPBTER.txt", header = T, stringsAsFactors = F)
+
+ER_samp$scenario <- "Base"
+ER_diff$scenario <- "2"
+ER_sim$scenario <- "1"
+
+ER_sim$sr <- .2
+ER_diff$sr <- .2
+
+combinedER <- rbind(ER_samp, ER_sim, ER_diff) %>% pivot_wider(names_from = type, values_from = ER) %>%
+	select(sr, scenario, group, MLE, Ac, NoEx) 
+
+colnames(combinedER)[4:6] <- paste0("ER_", colnames(combinedER)[4:6])
+
+combined <- combined %>% left_join(combinedER, by = c("sr", "scenario", "group"))
+
+#change groups names to make ms easier to read
+tempSwitch <- function(x){
+	y <- x
+	y[x == "GSIgroup3"] <- "GSI A"
+	y[x == "GSIgroup6"] <- "GSI B"
+	y[x == "GSIgroup9"] <- "GSI C"
+	y[x == "pbtGroup8"] <- "PBT A"
+	y[x == "pbtGroup24"] <- "PBT B"
+	y[x == "pbtGroup11"] <- "PBT C"
+	y
+}
+combined <- combined %>% mutate(group = tempSwitch(group)) %>% arrange(scenario, sr, group)
+combined <- rbind(combined[combined$scenario == "Base",], combined[combined$scenario != "Base",]) #put base first in table
+
+write.table(combined, "./MS_tables/supplemental_SampRate_MSE_ER.txt", row.names = F, col.names = T, quote = F, sep = "\t")
+
+
+
+
+# MSE and ER for binom var scenarios
+MSE_lowtag <- read.table("./tables/allLowTagBinomDiffMSE.txt", header = T, stringsAsFactors = F)
+MSE_diffBin <- read.table("./tables/allBinomDiffMSE.txt", header = T, stringsAsFactors = F)
+MSE_simBin <- read.table("./tables/allBinomSimilarMSE.txt", header = T, stringsAsFactors = F)
+
+MSE_lowtag$scenario <- "5"
+MSE_diffBin$scenario <- "4"
+MSE_simBin$scenario <- "3"
+
+combined2 <- rbind(MSE_simBin, MSE_diffBin, MSE_lowtag) %>% pivot_wider(names_from = type, values_from = MSE) %>%
+	select(scenario, group, MLE, Ac, NoEx) 
+
+colnames(combined2)[3:5] <- paste0("MSE_", colnames(combined2)[3:5])
+
+ER_lowtag <- read.table("./tables/allBinomLowTagDiffER.txt", header = T, stringsAsFactors = F)
+ER_diffBin <- read.table("./tables/allBinomDiffER.txt", header = T, stringsAsFactors = F)
+ER_simBin <- read.table("./tables/allBinomSimilarER.txt", header = T, stringsAsFactors = F)
+
+ER_lowtag$scenario <- "5"
+ER_diffBin$scenario <- "4"
+ER_simBin$scenario <- "3"
+
+combinedER <- rbind(ER_simBin, ER_diffBin, ER_lowtag) %>% pivot_wider(names_from = type, values_from = ER) %>%
+	select(scenario, group, MLE, Ac, NoEx) 
+colnames(combinedER)[3:5] <- paste0("ER_", colnames(combinedER)[3:5])
+
+combined2 <- combined2 %>% left_join(combinedER, by = c("scenario", "group"))
+
+combined2 <- combined2 %>% mutate(g1 = tempSwitch(gsub("_cat[12]", "", group)), g2 = gsub("[A-z]+[0-9]+_", "", group)) %>%
+	mutate(g2 = gsub("cat", ", category ", g2)) %>% mutate(newGroup = paste0(g1, g2)) %>% 
+	arrange(scenario, newGroup) %>% select(-g1, -g2, -group) %>% select(scenario, newGroup, everything())
+
+write.table(combined2, "./MS_tables/supplemental_binom_MSE_ER.txt", row.names = F, col.names = T, quote = F, sep = "\t")
